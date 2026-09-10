@@ -1,0 +1,105 @@
+# Take-Home Assignment
+
+## Scope and expectations
+
+- **Effort: about 4 hours. Please do not exceed 6.** We have pre-supplied the data loader and the query tool so your time goes into design and evaluation, not plumbing. If you hit the cap, stop and write down what you would have done next. We will not penalise an unfinished submission that says clearly what is missing and why.
+- **Return within 4 days** of receiving this.
+- **We'll send you the starter files as a zip attached to this email.** Work locally.
+- **Unpaid.** We know that is a real cost to you. It is a company constraint, not a preference, and we have kept the scope small because of it.
+- **AI tools are allowed and expected.** We use them ourselves. The only condition: in the follow-up call you will be asked to explain and defend every design decision in your submission. "The model wrote it that way" is not an answer we can work with.
+- **Ask clarifying questions before you start.** Email me directly. Asking is a positive signal, not a negative one.
+
+## What we provide
+
+In the starter repo:
+
+- `data/survey_responses.csv` — a real public dataset, raw and unmodified (see below)
+- `data/loader.py` — loads it, done
+- `src/query.py` — the only tool available for touching the dataset, fully implemented. Use it as-is; don't rewrite the aggregation logic.
+
+We do **not** provide a graph stub. The architecture is yours to choose and justify.
+
+## The dataset
+
+This is real public data, not a synthetic mock: an employee engagement survey, six waves, long format (one row per respondent per question), with department, role, and question fields. It is the raw export — nothing has been cleaned, including the columns. We are not going to characterise it further than that. Part of this task is figuring out what you're actually working with before you trust it — including whether there is anything about its shape that would make an "aggregates only" safety guarantee fail. We are telling you directly that the data has at least one property material to that guarantee. We are not telling you what it is.
+
+## The task
+
+Build a system that answers questions over the dataset.
+
+**Required behaviour:**
+
+1. **Routing** — every incoming question must be classified into exactly one of two outcomes: **answer** (as an aggregate, since aggregate is the only kind of answer this system can ever give) or **refuse**. How you structure this decision (a dedicated router node, a single agent with a decision step, something else) is your choice.
+2. **Aggregates only** — the only access to the dataset is the query tool. It must never let raw individual survey rows reach the LLM. This includes aggregates that, in effect, describe one person.
+3. **Refusal path** — questions that would identify an individual, or that fall outside the dataset, must be refused with a clear reason.
+4. **At least one required test question must be multi-hop** — answerable only by combining results from more than one query call (for example, a comparison across two dimensions, or a question whose answer depends on a first query's result). Design your system to handle this, not just single-lookup questions.
+5. **The query tool will sometimes fail.** We are not telling you when or how, and it is not a fixed pattern you can count your way around. Your system needs to behave sensibly when a tool call doesn't succeed the first time, without burning unbounded retries or silently returning a wrong answer.
+6. **Loop safety** — your system must not be able to run away. How you enforce this (a call budget, duplicate-call detection, a step limit, something else) and where you set the threshold is your decision, and you should be able to justify the number you picked, not just that a number exists.
+
+Use whatever orchestration approach you think is right — LangGraph, a different framework, or something you write yourself. Justify the choice in your writeup. We care about the reasoning, not the library.
+
+You do not need to deploy this. Local execution is fine. Do not build a frontend.
+
+## Deliverables
+
+### 1. Your submission
+
+Zip your whole project — code, `TRADEOFFS.md`, README, everything — and name the file with your name, e.g. `john-doe-takehome.zip`. Email it to e.germain@house-of-communication.com.
+
+### 2. An evaluation you would stake a production launch on
+
+We are not giving you a metrics checklist. Deciding what to measure, and how much to trust what you measure, is part of what we're evaluating. Build an evaluation approach you could defend to a reviewer who assumes it's wrong until proven otherwise.
+
+At minimum your submission must include, alongside the harness itself, three short written answers (a paragraph each is fine):
+
+- **Which of your own metrics or checks do you trust least, and why?**
+- **Name one metric or check you considered and deliberately did not build. Why not?**
+- **Which of your test cases would a naive or tutorial-quality implementation pass, but a correct one would fail — i.e., where is your evaluation actually doing work, versus just confirming the system runs?**
+
+Build the eval before you build out the full system. If you're going to run short on time, we would rather see a thin system with a real evaluation than a polished system with none.
+
+### 3. Red-team your own system
+
+Give three inputs specifically designed to make your own system leak an individual's data or refuse something it shouldn't. Report what actually happened for each, including if it broke.
+
+### 4. `TRADEOFFS.md`
+
+Max 2 pages. Cover:
+
+- Why this architecture, against at least one alternative you considered and rejected
+- How you decided on your loop-safety threshold, and what happens at the boundary
+- The exact respondent-count threshold below which you refuse or suppress an aggregate, and the specific query result from this dataset that convinced you it was necessary — not a general explanation of the concept, the actual number and the actual case
+- What you found out about the dataset that mattered, and how it changed your design
+- If you used an LLM as a judge anywhere: how would you check it agrees with a human, and which direction is it likely biased?
+- What you would build next with two more weeks, and what you would build differently with two more months
+- What you did *not* do, and why
+
+### 5. A README
+
+Enough that we can run both the system and the evaluation without asking you a question.
+
+Optional, not scored: a short screen recording walking through it.
+
+## How we score this
+
+| Weight | Criterion                                                                                                                                                                                                                          |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 35%    | **Evaluation judgment** — not whether specific metrics appear, but whether the evaluation would actually catch real failures, and whether the self-critique answers show genuine understanding versus a plausible-sounding gloss |
+| 25%    | **Judgment and tradeoffs** — architecture reasoning, what you found in the data and how it changed your design, honesty about limitations                                                                                         |
+| 20%    | **Correctness and safety** — does it work end to end, does the refusal path hold, does the multi-hop question get handled correctly, does the system behave sensibly when the tool fails                                         |
+| 15%    | **Code quality** — modularity, error handling, tests, readability                                                                                                                                                                  |
+| 5%     | **Documentation** — can we run it cold                                                                                                                                                                                             |
+
+A working system with a shallow evaluation will score below a rougher system with a real one. Submissions are scored by two reviewers.
+
+## IP, data, and privacy
+
+- **You retain all intellectual property in your submission.** We use it solely to evaluate your application. We will not use it in production or derive anything from it.
+- **What we collect:** your submitted code, your CV, and correspondence relating to this application. Our lawful basis is taking steps prior to entering a contract with you.
+- **Retention:** we delete your submission and application data within 6 months of a hiring decision, unless you separately and explicitly consent to us keeping it on file for future roles. That consent is optional and declining it does not affect this application.
+- **Your rights:** you can request access to, correction of, or deletion of your data at any time by emailing me, and we will act within 30 days.
+- The hiring company is based in Munich, Germany and is the data controller. CreativeNest acts as our processor for sourcing.
+
+## What happens next
+
+If we move forward, we will schedule a **60-minute remote walkthrough** where you present the solution and we dig into the decisions. That conversation carries more weight than the code itself. Expect us to push on your evaluation specifically, on what you found in the dataset and what you did about it, and on the three inputs you used to attack your own system.
