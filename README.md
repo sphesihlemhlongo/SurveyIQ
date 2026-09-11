@@ -62,13 +62,55 @@ The system enforces strict differential privacy guarantees ($k$-anonymity, diffe
 
 ## Setup & Installation
 
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt langchain-anthropic
+### 1. Create & Activate Virtual Environment
 
-# 2. (Optional) Configure Anthropic API Key for live Claude 3.5 Sonnet execution
-# If unset, the system seamlessly uses the local deterministic test agent.
+**macOS / Linux:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+**Windows (Command Prompt):**
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+**Windows (Git Bash):**
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+```
+
+### 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt langchain-anthropic
+```
+
+### 3. (Optional) Configure Anthropic API Key
+
+If unset, the system seamlessly uses the local deterministic test agent (`mock_llm.py`).
+
+**macOS / Linux / Git Bash:**
+```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:ANTHROPIC_API_KEY="your-anthropic-api-key"
+```
+
+**Windows (Command Prompt):**
+```cmd
+set ANTHROPIC_API_KEY="your-anthropic-api-key"
 ```
 
 ---

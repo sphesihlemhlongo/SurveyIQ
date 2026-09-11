@@ -26,6 +26,8 @@ EXCLUDED_NAMES = {
     ".pytest_cache",
     ".git",
     ".env",
+    ".venv",
+    "venv",
     ZIP_NAME,
 }
 
