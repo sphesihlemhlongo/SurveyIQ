@@ -98,20 +98,27 @@ pip install -r requirements.txt langchain-anthropic
 
 If unset, the system seamlessly uses the local deterministic test agent (`mock_llm.py`).
 
-**macOS / Linux / Git Bash:**
+**Via `.env` file (recommended):**
+Copy `.env.example` to `.env` and set your key:
 ```bash
-export ANTHROPIC_API_KEY="your-anthropic-api-key"
+cp .env.example .env
 ```
+*(On Windows PowerShell: `Copy-Item .env.example .env`)*
 
-**Windows (PowerShell):**
-```powershell
-$env:ANTHROPIC_API_KEY="your-anthropic-api-key"
-```
+**Or export directly in shell:**
 
-**Windows (Command Prompt):**
-```cmd
-set ANTHROPIC_API_KEY="your-anthropic-api-key"
-```
+- **macOS / Linux / Git Bash:**
+  ```bash
+  export ANTHROPIC_API_KEY="your-anthropic-api-key"
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  $env:ANTHROPIC_API_KEY="your-anthropic-api-key"
+  ```
+- **Windows (Command Prompt):**
+  ```cmd
+  set ANTHROPIC_API_KEY="your-anthropic-api-key"
+  ```
 
 ---
 

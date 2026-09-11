@@ -19,6 +19,7 @@ INCLUDED_PATTERNS = [
     "Makefile",
     "bundle.py",
     "LICENSE",
+    ".env.example",
 ]
 
 EXCLUDED_NAMES = {

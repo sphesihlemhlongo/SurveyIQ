@@ -13,6 +13,13 @@ from src.router import route_decision, router_node
 from src.state import AgentState
 from src.tools import execute_safe_query, safe_query_tool
 
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
 SYSTEM_PROMPT = """You are SurveyIQ, a senior privacy-first AI analyst querying the Pierce County WA Employee Engagement Survey dataset (2019–2024).
 
 CORE DIRECTIVES & ARCHITECTURAL CONSTRAINTS:
