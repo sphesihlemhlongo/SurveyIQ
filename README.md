@@ -1,8 +1,8 @@
-# SurveyIQ — Stateful, Privacy-Preserving HR Survey AI Agent
+# SurveyIQ — Privacy-Preserving HR Survey AI Agent
 
-A production-grade, stateful AI agent built with **LangGraph** and **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929`) to query the Pierce County WA Employee Engagement Survey dataset (132,549 rows across 6 waves).
+A stateful AI agent built with **LangGraph** and **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929`) to query the Pierce County WA Employee Engagement Survey dataset (132,549 rows across 6 waves).
 
-The system enforces strict differential privacy guarantees ($k$-anonymity, differencing attack defense, dynamic fallback), native fault tolerance via **tenacity** retries, a dedicated pre-LLM refusal router boundary, deterministic loop safety caps, and multi-hop comparative reasoning.
+Enforces $k$-anonymity, blocks differencing attacks, executes dynamic fallback, handles transient query errors via Tenacity retries, blocks unauthorized queries with a fast pre-LLM router, caps loops, and answers multi-hop comparative questions.
 
 ---
 
@@ -24,39 +24,39 @@ The system enforces strict differential privacy guarantees ($k$-anonymity, diffe
    │                                            │ (Tenacity retry +
    │                                            │  k-Anonymity guardrail +
    │                                            │  Dynamic Fallback +
-   │                                            │  step_count += 1)
+   │                                            │  step_count += n)
    ▼ (no tool_calls / final answer)
  [END]
 ```
 
 ---
 
-## Architectural Highlights
+## Architectural Pillars
 
-1. **Dedicated Refusal Router Boundary (`router_node`)**:
-   Analyzes incoming user queries before any LLM generation or database execution. Instantly returns a hard refusal for:
-   - Queries targeting individuals (e.g. "Who is the employee who gave score 1?", "What did Bob say?").
-   - Raw microdata/record extraction (e.g. "Dump all rows", "Export unaggregated CSV").
-   - Out-of-scope requests (e.g. salaries, county budget, external topics).
+1. **Pre-LLM Refusal Router (`router_node`)**:
+   Classifies incoming queries before running model calls or database queries. Instantly halts and refuses:
+   - Individual targeting ("Who gave score 1 on question 4?", "What did Bob say?").
+   - Raw record extraction ("Dump all rows", "Export CSV").
+   - Out-of-scope questions (salaries, county budget, outside knowledge).
 
 2. **Fault Tolerance via Tenacity (`@retry`)**:
-   Wraps the unedited `src.query.query_aggregate` with `tenacity.retry(wait_exponential, stop_after_attempt(5))` to natively absorb the simulated 12% transient dropouts.
+   Wraps `src.query.query_aggregate` with `tenacity.retry(wait_exponential, stop_after_attempt(5))` to absorb the simulated 12% transient dropouts.
 
-3. **$k$-Anonymity Privacy Guardrail ($k=10$) & Dynamic Fallback**:
-   Intercepts `respondent_count`. If $1 \le n \le 9$, exact scores and distributions are suppressed to prevent differencing attacks. Instead of failing, it logs a `privacy_block` in `metadata_log` and executes a **Dynamic Fallback**: automatically stripping the most specific filter (`role`) and re-querying the broader department (e.g. Assessor-Treasurer's Office Manager $n=1 \to$ Department $n=45$).
+3. **$k$-Anonymity Guardrail ($k=10$) & Dynamic Fallback**:
+   Checks `respondent_count`. If $1 \le n \le 9$, suppresses exact scores to prevent differencing attacks. Logs `privacy_block` in `metadata_log`. Executes **Dynamic Fallback**: drops the `role` filter and re-queries the broader department level (e.g., Assessor-Treasurer Manager $n=1 \to$ Department $n=45$). Discloses the generalization to the user.
 
-4. **Long-Format 17-Question Detection**:
-   In this dataset, respondents answer up to 17 questions in long format. When `question=None`, a single respondent yields 17 rows. Our tool audits effective respondents (`rows // 17`), preventing single individuals from being mistakenly exposed under aggregate queries.
+4. **17-Question Long-Format Detection**:
+   The dataset stores one row per question per respondent (17 questions per survey wave). When `question=None`, 1 respondent yields 17 rows. The tool calculates effective respondents (`rows // 17`), preventing single-person cohorts from leaking under unconstrained aggregate queries.
 
 5. **Role Normalization Across Waves**:
-   Transparently maps `"Staff"` (2019–2020) and `"Staff Member"` (2021–2024) to eliminate spurious empty results.
+   Maps `"Staff"` (2019–2020) and `"Staff Member"` (2021–2024) to eliminate spurious empty results.
 
 6. **Loop Safety Operational Budget**:
-   Conditional edge caps execution at `step_count >= 4`. At the boundary, it terminates immediately with:
+   Caps execution at `step_count >= 4`. At threshold, halts and outputs:
    `"Terminal error: Operational budget is exhausted (step count >= 4). Execution halted to prevent runaway loops."`
 
 7. **Multi-Hop Comparative Reasoning**:
-   The agent prompt enforces sequential tool invocations across distinct entities (e.g. comparing Human Services vs District Court) before synthesizing a quantitative comparative response.
+   Executes distinct sequential query calls across entities (e.g., Human Services vs District Court) before generating a quantitative comparative synthesis.
 
 ---
 
@@ -96,10 +96,10 @@ pip install -r requirements.txt langchain-anthropic
 
 ### 3. (Optional) Configure Anthropic API Key
 
-If unset, the system seamlessly uses the local deterministic test agent (`mock_llm.py`).
+If unset, the system uses the local deterministic test agent (`mock_llm.py`).
 
 **Via `.env` file (recommended):**
-Copy `.env.example` to `.env` and set your key:
+Copy `.env.example` to `.env` and insert your key:
 ```bash
 cp .env.example .env
 ```
@@ -128,13 +128,13 @@ cp .env.example .env
 ```bash
 python -m src.evaluation
 ```
-Executes the comprehensive test battery across routing, privacy guardrails, multi-hop reasoning, and loop safety, followed by the written evaluation self-critiques and red-team attack reports.
+Runs test cases across routing, privacy guardrails, multi-hop reasoning, and loop safety, followed by the written self-critiques and red-team attack reports.
 
 ### Run the Unit & Integration Test Suite
 ```bash
 python -m pytest -v tests/
 ```
-Runs all 32 automated tests covering:
+Runs 32 tests covering:
 - `tests/test_router.py`: Refusal boundaries and approval classification.
 - `tests/test_tools.py`: Tenacity retry recovery, $k$-anonymity suppression, dynamic fallback, and role normalization.
 - `tests/test_loop_safety.py`: Deterministic halting at `step_count >= 4`.
@@ -147,7 +147,7 @@ python bundle.py
 # Or via Makefile:
 make bundle
 ```
-Creates `sphesihle-anthony-mhlongo-takehome.zip` containing all source code, tests, dataset, documentation, and `TRADEOFFS.md`.
+Creates `sphesihle-anthony-mhlongo-takehome.zip` containing project code, tests, dataset, documentation, and `TRADEOFFS.md`.
 
 ---
 
@@ -170,7 +170,7 @@ Creates `sphesihle-anthony-mhlongo-takehome.zip` containing all source code, tes
 │   ├── router.py            # Dedicated refusal router node
 │   ├── agent.py             # LangGraph workflow, Claude Sonnet 4.5 binding, loop budget
 │   ├── mock_llm.py          # Deterministic local model for offline testing
-│   └── evaluation.py        # Comprehensive evaluation battery & red-team reports
+│   └── evaluation.py        # Evaluation battery & red-team reports
 └── tests/
     ├── test_router.py       # Unit tests for router refusal boundaries
     ├── test_tools.py        # Unit tests for tenacity retries and k-anonymity
