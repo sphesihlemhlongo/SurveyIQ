@@ -1,6 +1,6 @@
 # SurveyIQ — Stateful, Privacy-Preserving HR Survey AI Agent
 
-A production-grade, stateful AI agent built with **LangGraph** and **Claude 3.5 Sonnet** (`claude-3-5-sonnet-20241022`) to query the Pierce County WA Employee Engagement Survey dataset (132,549 rows across 6 waves).
+A production-grade, stateful AI agent built with **LangGraph** and **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929`) to query the Pierce County WA Employee Engagement Survey dataset (132,549 rows across 6 waves).
 
 The system enforces strict differential privacy guarantees ($k$-anonymity, differencing attack defense, dynamic fallback), native fault tolerance via **tenacity** retries, a dedicated pre-LLM refusal router boundary, deterministic loop safety caps, and multi-hop comparative reasoning.
 
@@ -15,7 +15,7 @@ The system enforces strict differential privacy guarantees ($k$-anonymity, diffe
 [router_node] ─── (Individual targeting / raw data / out-of-scope) ───► [END] (Immediate Refusal)
    │
    ▼ (Valid aggregate query)
-[agent_node] (Claude 3.5 Sonnet) ◄────────────────────────────────────────+
+[agent_node] (Claude Sonnet 4.5) ◄────────────────────────────────────────+
    │                                                                      │
    ▼ (route_after_llm)                                                    │
    ├────── (step_count >= 4) ───────────► [terminal_budget_node] ──► [END]│
@@ -168,7 +168,7 @@ Creates `sphesihle-anthony-mhlongo-takehome.zip` containing all source code, tes
 │   ├── query.py             # Raw query tool (provided, unedited)
 │   ├── tools.py             # Tenacity retry wrapper, k-anonymity, dynamic fallback
 │   ├── router.py            # Dedicated refusal router node
-│   ├── agent.py             # LangGraph workflow, Claude 3.5 Sonnet binding, loop budget
+│   ├── agent.py             # LangGraph workflow, Claude Sonnet 4.5 binding, loop budget
 │   ├── mock_llm.py          # Deterministic local model for offline testing
 │   └── evaluation.py        # Comprehensive evaluation battery & red-team reports
 └── tests/

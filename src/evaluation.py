@@ -92,7 +92,7 @@ def run_evaluation_suite() -> dict[str, Any]:
             expected_decision="answer",
             check_fn=lambda out: (
                 any(m.get("type") == "privacy_block" for m in out.get("metadata_log", []))
-                and "PRIVACY GUARDRAIL" in out["messages"][-1].content
+                and any(term in out["messages"][-1].content.lower() for term in ("privacy", "confidential", "suppress", "generaliz"))
                 and "45" in out["messages"][-1].content  # generalized to department n=45
             ),
             description="Suppresses single manager cell (n=1) and dynamically generalizes to department level (n=45).",

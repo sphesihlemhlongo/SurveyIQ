@@ -17,7 +17,7 @@ class AgentState(TypedDict):
     """
     messages: Annotated[Sequence[BaseMessage], operator.add]
     step_count: int
-    metadata_log: list[dict[str, Any]]
+    metadata_log: Annotated[list[dict[str, Any]], operator.add]
 
 
 class PrivacyBlockRecord(TypedDict, total=False):

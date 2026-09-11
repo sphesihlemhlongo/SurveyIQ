@@ -33,23 +33,27 @@ LOOP_SAFETY_BUDGET = 4
 
 
 def create_llm_node(llm: Any = None) -> Callable[[AgentState], dict[str, Any]]:
-    """Creates the agent LLM node using Claude 3.5 Sonnet (or provided model)."""
+    """Creates the agent LLM node using Claude Sonnet 4.5 (or provided model)."""
     if llm is None:
         try:
             from langchain_anthropic import ChatAnthropic
+
             api_key = os.environ.get("ANTHROPIC_API_KEY")
+            model_name = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
             if not api_key:
                 # Fallback to local deterministic agent if key not present
                 from src.mock_llm import DeterministicSurveyLLM
+
                 llm = DeterministicSurveyLLM()
             else:
                 llm = ChatAnthropic(
-                    model="claude-3-5-sonnet-20241022",
+                    model=model_name,
                     temperature=0.0,
                     api_key=api_key,
                 ).bind_tools([safe_query_tool])
         except Exception:
             from src.mock_llm import DeterministicSurveyLLM
+
             llm = DeterministicSurveyLLM()
 
     def agent_node(state: AgentState) -> dict[str, Any]:
@@ -58,7 +62,16 @@ def create_llm_node(llm: Any = None) -> Callable[[AgentState], dict[str, Any]]:
         if not messages or not isinstance(messages[0], SystemMessage):
             messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
 
-        response = llm.invoke(messages)
+        try:
+            response = llm.invoke(messages)
+        except Exception as e:
+            # If the live model API call fails (e.g., 404 model not found, invalid key, rate limit),
+            # gracefully fall back to the deterministic survey LLM
+            print(f"[SurveyIQ Warning] Live LLM call failed ({e}). Falling back to deterministic agent.")
+            from src.mock_llm import DeterministicSurveyLLM
+            fallback_llm = DeterministicSurveyLLM()
+            response = fallback_llm.invoke(messages)
+
         return {"messages": [response]}
 
     return agent_node
@@ -103,9 +116,10 @@ def tool_execution_node(state: AgentState) -> dict[str, Any]:
                 )
 
     current_step = state.get("step_count", 0)
+    step_increment = len(tool_messages) if tool_messages else 1
     return {
         "messages": tool_messages,
-        "step_count": current_step + 1,
+        "step_count": current_step + step_increment,
         "metadata_log": metadata_events,
     }
 

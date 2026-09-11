@@ -16,6 +16,5 @@ bundle-blank:
 	python bundle.py --blank-tradeoffs
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	rm -f sphesihle-anthony-mhlongo-takehome.zip
+	python bundle.py --clean
+
